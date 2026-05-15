@@ -5,6 +5,7 @@ import searchservice.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
@@ -56,5 +57,40 @@ public class ProductSearchService {
 
         return productSearchRepository
                 .findByNameContainingOrDescriptionContaining(keyword, keyword);
+    }
+
+    public List<ProductDocument> search(String keyword, String category, String brand, String sort
+    ) {
+
+        List<ProductDocument> products;
+
+        if (category != null && brand != null) {
+            products = productSearchRepository
+                    .findByNameContainingOrDescriptionContainingAndCategoryAndBrand(keyword, keyword, category, brand);
+        }
+        else if (category != null) {
+            products = productSearchRepository
+                    .findByNameContainingOrDescriptionContainingAndCategory(keyword, keyword, category);
+        }
+        else {
+            products = productSearchRepository
+                    .findByNameContainingOrDescriptionContaining(keyword, keyword);
+        }
+
+        List<ProductDocument> result = new ArrayList<>(products);
+
+        if ("priceAsc".equals(sort)) {
+            result.sort((a, b) -> a.getPrice().compareTo(b.getPrice()));
+        }
+
+        if ("priceDesc".equals(sort)) {
+            result.sort((a, b) -> b.getPrice().compareTo(a.getPrice()));
+        }
+
+        if ("rating".equals(sort)) {
+            result.sort((a, b) -> b.getRating().compareTo(a.getRating()));
+        }
+
+        return result;
     }
 }
