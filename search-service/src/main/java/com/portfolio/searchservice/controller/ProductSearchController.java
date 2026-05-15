@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/search/products")
@@ -28,5 +29,15 @@ public class ProductSearchController {
     @GetMapping
     public Iterable<ProductDocument> getAllProducts() {
         return productSearchService.getAllProducts();
+    }
+
+//    @GetMapping("/search")
+//    public List<ProductDocument> searchProducts(@RequestParam String keyword) {
+//        return productSearchService.search(keyword);
+//    }
+
+    @GetMapping("/search")
+    public List<ProductDocument> searchProducts(@RequestParam String keyword, @RequestParam(required = false) String category) {
+        return productSearchService.search(keyword, category);
     }
 }
