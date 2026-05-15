@@ -20,4 +20,12 @@ public interface ProductSearchRepository
             String description,
             String category
     );
+
+    List<ProductDocument>
+    findByNameContainingOrDescriptionContainingAndCategoryAndBrand(
+            String name,
+            String description,
+            String category,
+            String brand
+    );
 }

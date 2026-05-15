@@ -1,6 +1,6 @@
-package com.portfolio.productservice.repository;
+package productservice.repository;
 
-import com.portfolio.productservice.model.Product;
+import productservice.model.Product;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 
 import java.util.UUID;

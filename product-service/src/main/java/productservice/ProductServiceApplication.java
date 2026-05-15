@@ -1,4 +1,4 @@
-package com.portfolio.productservice;
+package productservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

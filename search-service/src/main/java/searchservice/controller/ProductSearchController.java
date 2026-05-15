@@ -36,8 +36,13 @@ public class ProductSearchController {
 //        return productSearchService.search(keyword);
 //    }
 
+//    @GetMapping("/search")
+//    public List<ProductDocument> searchProducts(@RequestParam String keyword, @RequestParam(required = false) String category) {
+//        return productSearchService.search(keyword, category);
+//    }
+
     @GetMapping("/search")
-    public List<ProductDocument> searchProducts(@RequestParam String keyword, @RequestParam(required = false) String category) {
-        return productSearchService.search(keyword, category);
+    public List<ProductDocument> searchProducts(@RequestParam String keyword, @RequestParam(required = false) String category, @RequestParam(required = false) String brand) {
+        return productSearchService.search(keyword, category, brand);
     }
 }

@@ -1,7 +1,7 @@
-package com.portfolio.productservice.controller;
+package productservice.controller;
 
-import com.portfolio.productservice.model.Product;
-import com.portfolio.productservice.service.ProductService;
+import productservice.model.Product;
+import productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -41,4 +41,20 @@ public class ProductSearchService {
         return productSearchRepository
                 .findByNameContainingOrDescriptionContaining(keyword, keyword);
     }
+
+    public List<ProductDocument> search(String keyword, String category, String brand) {
+
+        if (category != null && brand != null) {
+            return productSearchRepository
+                    .findByNameContainingOrDescriptionContainingAndCategoryAndBrand(keyword, keyword, category, brand);
+        }
+
+        if (category != null) {
+            return productSearchRepository
+                    .findByNameContainingOrDescriptionContainingAndCategory(keyword, keyword, category);
+        }
+
+        return productSearchRepository
+                .findByNameContainingOrDescriptionContaining(keyword, keyword);
+    }
 }

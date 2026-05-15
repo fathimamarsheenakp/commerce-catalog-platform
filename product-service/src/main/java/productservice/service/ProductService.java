@@ -1,7 +1,7 @@
-package com.portfolio.productservice.service;
+package productservice.service;
 
-import com.portfolio.productservice.model.Product;
-import com.portfolio.productservice.repository.ProductRepository;
+import productservice.model.Product;
+import productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
