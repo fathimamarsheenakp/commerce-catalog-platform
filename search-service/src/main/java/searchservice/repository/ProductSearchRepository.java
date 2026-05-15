@@ -1,5 +1,7 @@
 package searchservice.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import searchservice.document.ProductDocument;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
@@ -27,5 +29,12 @@ public interface ProductSearchRepository
             String description,
             String category,
             String brand
+    );
+
+    Page<ProductDocument>
+    findByNameContainingOrDescriptionContaining(
+            String name,
+            String description,
+            Pageable pageable
     );
 }

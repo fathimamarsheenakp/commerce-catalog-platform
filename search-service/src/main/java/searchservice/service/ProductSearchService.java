@@ -1,5 +1,8 @@
 package searchservice.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import searchservice.document.ProductDocument;
 import searchservice.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
@@ -92,5 +95,13 @@ public class ProductSearchService {
         }
 
         return result;
+    }
+
+    public Page<ProductDocument> searchWithPagination(String keyword, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return productSearchRepository
+                .findByNameContainingOrDescriptionContaining(keyword, keyword, pageable);
     }
 }

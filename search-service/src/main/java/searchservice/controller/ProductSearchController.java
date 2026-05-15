@@ -1,5 +1,6 @@
 package searchservice.controller;
 
+import org.springframework.data.domain.Page;
 import searchservice.document.ProductDocument;
 import searchservice.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
@@ -49,5 +50,10 @@ public class ProductSearchController {
     @GetMapping("/search")
     public List<ProductDocument> searchProducts(@RequestParam String keyword, @RequestParam(required = false) String category, @RequestParam(required = false) String brand, @RequestParam(required = false) String sort) {
         return productSearchService.search(keyword, category, brand, sort);
+    }
+
+    @GetMapping("/paged-search")
+    public Page<ProductDocument> pagedSearch(@RequestParam String keyword, @RequestParam int page, @RequestParam int size) {
+        return productSearchService.searchWithPagination(keyword, page, size);
     }
 }
