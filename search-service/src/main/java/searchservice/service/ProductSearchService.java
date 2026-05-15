@@ -1,7 +1,7 @@
-package com.portfolio.searchservice.service;
+package searchservice.service;
 
-import com.portfolio.searchservice.document.ProductDocument;
-import com.portfolio.searchservice.repository.ProductSearchRepository;
+import searchservice.document.ProductDocument;
+import searchservice.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

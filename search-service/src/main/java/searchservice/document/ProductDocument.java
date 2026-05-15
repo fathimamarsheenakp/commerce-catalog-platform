@@ -1,4 +1,4 @@
-package com.portfolio.searchservice.document;
+package searchservice.document;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;

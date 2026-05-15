@@ -1,7 +1,7 @@
-package com.portfolio.searchservice.controller;
+package searchservice.controller;
 
-import com.portfolio.searchservice.document.ProductDocument;
-import com.portfolio.searchservice.service.ProductSearchService;
+import searchservice.document.ProductDocument;
+import searchservice.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
