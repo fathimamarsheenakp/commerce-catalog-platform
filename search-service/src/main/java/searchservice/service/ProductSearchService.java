@@ -1,5 +1,7 @@
 package searchservice.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -8,16 +10,15 @@ import searchservice.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class ProductSearchService {
 
     private final ProductSearchRepository productSearchRepository;
+    private final ElasticsearchClient elasticsearchClient;
 
     public ProductDocument save(ProductDocument productDocument) {
         return productSearchRepository.save(productDocument);
@@ -103,5 +104,32 @@ public class ProductSearchService {
 
         return productSearchRepository
                 .findByNameContainingOrDescriptionContaining(keyword, keyword, pageable);
+    }
+
+    public Map<String, Long> getProductCountByCategory() throws IOException {
+
+        SearchResponse<ProductDocument> response = elasticsearchClient.search(s -> s
+                        .index("products")
+                        .size(0)
+                        .aggregations("categories", a -> a
+                                .terms(t -> t
+                                        .field("category.keyword")
+                                )
+                        ),
+                ProductDocument.class
+        );
+
+        Map<String, Long> result = new HashMap<>();
+
+        response.aggregations()
+                .get("categories")
+                .sterms()
+                .buckets()
+                .array()
+                .forEach(bucket -> {
+                    result.put(bucket.key().stringValue(), bucket.docCount());
+                });
+
+        return result;
     }
 }

@@ -6,6 +6,8 @@ import searchservice.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
@@ -55,5 +57,10 @@ public class ProductSearchController {
     @GetMapping("/paged-search")
     public Page<ProductDocument> pagedSearch(@RequestParam String keyword, @RequestParam int page, @RequestParam int size) {
         return productSearchService.searchWithPagination(keyword, page, size);
+    }
+
+    @GetMapping("/aggregations/categories")
+    public Map<String, Long> getProductCountByCategory() throws IOException {
+        return productSearchService.getProductCountByCategory();
     }
 }
