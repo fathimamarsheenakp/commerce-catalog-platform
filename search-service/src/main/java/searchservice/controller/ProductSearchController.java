@@ -63,4 +63,24 @@ public class ProductSearchController {
     public Map<String, Long> getProductCountByCategory() throws IOException {
         return productSearchService.getProductCountByCategory();
     }
+
+    @GetMapping("/aggregations/brands")
+    public Map<String, Long> getProductCountByBrand() throws IOException {
+        return productSearchService.getProductCountByBrand();
+    }
+
+    @GetMapping("/aggregations/brands/average-rating")
+    public Map<String, Double> getAverageRatingByBrand() throws IOException {
+        return productSearchService.getAverageRatingByBrand();
+    }
+
+    @GetMapping("/aggregations/categories/price-stats")
+    public Map<String, Map<String, Double>> getPriceStatsByCategory() throws IOException {
+        return productSearchService.getPriceStatsByCategory();
+    }
+
+    @GetMapping("/aggregations/stats")
+    public Map<String, Object> getOverallProductStats() throws IOException {
+        return productSearchService.getOverallProductStats();
+    }
 }
