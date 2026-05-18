@@ -19,8 +19,21 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductEventProducer productEventProducer;
 
+    private void normalize(Product product) {
+        if (product.getBrand() != null) {
+            product.setBrand(product.getBrand().trim().toLowerCase());
+        }
+
+        if (product.getCategory() != null) {
+            product.setCategory(product.getCategory().trim().toLowerCase());
+        }
+    }
+
     public Product createProduct(Product product) {
         product.setId(UUID.randomUUID());
+
+        normalize(product);
+
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
 
@@ -40,6 +53,8 @@ public class ProductService {
 
     public Product updateProduct(UUID id, Product product) {
         Product existingProduct = getProductById(id);
+
+        normalize(product);
 
         existingProduct.setName(product.getName());
         existingProduct.setDescription(product.getDescription());
