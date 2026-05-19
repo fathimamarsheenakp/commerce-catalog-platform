@@ -1,5 +1,6 @@
 package productservice.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +17,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
         return ResponseEntity.ok(productService.createProduct(product));
     }
 
@@ -28,7 +29,7 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable UUID id,
-                                                 @RequestBody Product product) {
+                                                 @Valid @RequestBody Product product) {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 

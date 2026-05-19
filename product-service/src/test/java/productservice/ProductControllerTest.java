@@ -13,6 +13,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import productservice.controller.ProductController;
+import productservice.exception.ProductNotFoundException;
 import productservice.model.Product;
 import productservice.security.JwtUtil;
 import productservice.service.ProductService;
@@ -147,5 +148,37 @@ public class ProductControllerTest {
 
         verify(productService, times(1))
                 .deleteProduct(id);
+    }
+
+    @Test
+    void shouldReturnBadRequestForInvalidProduct() throws Exception {
+
+        Product product = Product.builder()
+                .name("")
+                .description("Test")
+                .brand("Apple")
+                .category("Mobiles")
+                .price(BigDecimal.valueOf(-100))
+                .available(true)
+                .rating(4.5)
+                .build();
+
+        mockMvc.perform(post("/api/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(product)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenProductDoesNotExist() throws Exception {
+
+        UUID id = UUID.randomUUID();
+
+        when(productService.getProductById(id))
+                .thenThrow(new ProductNotFoundException("Product not found"));
+
+        mockMvc.perform(get("/api/products/" + id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Product not found"));
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import productservice.event.ProductEvent;
+import productservice.exception.ProductNotFoundException;
 import productservice.kafka.ProductEventProducer;
 import productservice.model.Product;
 import productservice.repository.ProductRepository;
@@ -45,10 +46,9 @@ public class ProductService {
 
     public Product getProductById(UUID id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Product not found"
-                ));
+                .orElseThrow(() ->
+                        new ProductNotFoundException("Product not found")
+                );
     }
 
     public Product updateProduct(UUID id, Product product) {
