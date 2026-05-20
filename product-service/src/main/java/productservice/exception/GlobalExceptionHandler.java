@@ -83,4 +83,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST
         );
     }
+
+    @ExceptionHandler(InvalidLoginException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleInvalidLoginException(InvalidLoginException ex) {
+
+        Map<String, Object> error = new HashMap<>();
+
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", 401);
+        error.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(
+                error,
+                HttpStatus.UNAUTHORIZED
+        );
+    }
 }

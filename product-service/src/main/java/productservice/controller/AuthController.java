@@ -2,8 +2,10 @@ package productservice.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import productservice.exception.InvalidLoginException;
 import productservice.security.JwtUtil;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,12 +24,9 @@ public class AuthController {
 
         if ("admin".equals(username) && "password".equals(password)) {
             String token = jwtUtil.generateToken(username);
-            Map<String, String> response = new HashMap<>();
-            response.put("token", token);
-
-            return response;
+            return Collections.singletonMap("token", token);
         }
 
-        throw new RuntimeException("Invalid username or password");
+        throw new InvalidLoginException("Invalid username or password");
     }
 }
