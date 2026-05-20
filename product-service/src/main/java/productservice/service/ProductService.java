@@ -52,9 +52,19 @@ public class ProductService {
     }
 
     public Product updateProduct(UUID id, Product product) {
-        Product existingProduct = getProductById(id);
-
         normalize(product);
+
+        Product existingProduct = productRepository.findById(id).orElse(null);
+
+        if (existingProduct == null) {
+            product.setId(id);
+            product.setCreatedAt(LocalDateTime.now());
+            product.setUpdatedAt(LocalDateTime.now());
+
+            Product savedProduct = productRepository.save(product);
+            productEventProducer.sendProductEvent(toEvent("PRODUCT_UPDATED", savedProduct));
+            return savedProduct;
+        }
 
         existingProduct.setName(product.getName());
         existingProduct.setDescription(product.getDescription());
