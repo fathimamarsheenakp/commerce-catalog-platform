@@ -20,12 +20,15 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
+                        .pathMatchers("/actuator/health", "/actuator/info").permitAll()
                         .pathMatchers("/api/auth/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
                         .pathMatchers(HttpMethod.GET, "/api/products/**").authenticated()
-                        .anyExchange().permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/search/products/**").hasRole("ADMIN")
+                        .pathMatchers("/api/search/products/**").permitAll()
+                        .anyExchange().denyAll()
                 )
                 .addFilterAt(jwtAuthenticationFilter::filter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();

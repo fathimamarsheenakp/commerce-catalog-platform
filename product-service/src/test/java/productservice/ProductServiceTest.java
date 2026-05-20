@@ -95,7 +95,7 @@ public class ProductServiceTest {
         assertThatThrownBy(() ->
                 productService.getProductById(id)
         )
-                .isInstanceOf(ResponseStatusException.class)
+                .isInstanceOf(productservice.exception.ProductNotFoundException.class)
                 .hasMessageContaining("Product not found");
 
         verify(productRepository, times(1))
