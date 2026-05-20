@@ -21,11 +21,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/products/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").authenticated()
+
+                        .requestMatchers(HttpMethod.GET, "/api/products/**")
+                        .hasAnyRole("USER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/products/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**")
+                        .hasRole("ADMIN")
+
                         .anyRequest().permitAll()
                 )
                 .httpBasic(httpBasic -> httpBasic.disable())

@@ -24,6 +24,12 @@ public class AuthController {
     @Value("${app.admin.password-hash}")
     private String adminPasswordHash;
 
+    @Value("${app.user.username}")
+    private String userUsername;
+
+    @Value("${app.user.password-hash}")
+    private String userPasswordHash;
+
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody Map<String, String> request) {
 
@@ -35,7 +41,14 @@ public class AuthController {
         }
 
         if (adminUsername.equals(username) && passwordEncoder.matches(password, adminPasswordHash)) {
-            String token = jwtUtil.generateToken(username);
+            String token = jwtUtil.generateToken(username, "ADMIN");
+            return Collections.singletonMap("token", token);
+        }
+
+        if (userUsername.equals(username)
+                && passwordEncoder.matches(password, userPasswordHash)) {
+
+            String token = jwtUtil.generateToken(username, "USER");
             return Collections.singletonMap("token", token);
         }
 
