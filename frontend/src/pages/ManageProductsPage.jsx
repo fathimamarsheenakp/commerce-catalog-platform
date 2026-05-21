@@ -142,7 +142,7 @@ export default function ManageProductsPage() {
           'Product not found in catalog database. Sign in as admin and ensure product-service is running on port 8081.',
         )
       } else if (err.status === 401 || err.status === 403) {
-        setError('Not authorized. Sign in as admin (admin / password).')
+        setError('Not authorized. Sign in as admin to create or edit products.')
       } else {
         setError(err.message || 'Save failed')
       }

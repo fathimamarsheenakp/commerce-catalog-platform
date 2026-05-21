@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import DetailSkeleton from '../components/DetailSkeleton'
 import { deleteProduct } from '../api/products'
 import { getSearchProduct } from '../api/search'
 import { useAuth } from '../context/useAuth'
+import { formatPrice, formatRating } from '../utils/format'
 import { normalizeProduct } from '../utils/normalizeProducts'
-
-function formatPrice(price) {
-  if (price == null) return '—'
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(Number(price))
-}
 
 function idsMatch(a, b) {
   return a != null && b != null && String(a) === String(b)
@@ -68,7 +62,10 @@ export default function ProductDetailPage() {
     setError('')
     try {
       await deleteProduct(product.id)
-      navigate('/', { replace: true })
+      navigate('/', {
+        replace: true,
+        state: { catalogMessage: `"${product.name}" was deleted.` },
+      })
     } catch (err) {
       setError(err.message || 'Delete failed')
       setDeleting(false)
@@ -76,16 +73,19 @@ export default function ProductDetailPage() {
   }
 
   if (loading) {
-    return <p className="muted center">Loading…</p>
+    return <DetailSkeleton />
   }
 
   if (error && !product) {
     return (
       <div className="page-narrow">
-        <div className="panel">
-          <p className="alert alert-error">{error || 'Product not found'}</p>
-          <Link to="/" className="text-link">
-            ← Back to catalog
+        <div className="panel empty-state">
+          <p className="empty-state-title">Product not found</p>
+          <p className="alert alert-error" role="alert">
+            {error}
+          </p>
+          <Link to="/" className="btn btn-primary">
+            Back to catalog
           </Link>
         </div>
       </div>
@@ -96,13 +96,15 @@ export default function ProductDetailPage() {
     return null
   }
 
+  const available = product.available !== false
+
   return (
     <div className="page-narrow">
       <Link to="/" className="text-link breadcrumb">
         ← Back to catalog
       </Link>
       {syncNote && (
-        <p className="alert alert-success">
+        <p className="alert alert-success" role="status">
           Saved. Catalog search may take a few seconds to reflect changes.
         </p>
       )}
@@ -110,8 +112,9 @@ export default function ProductDetailPage() {
         <div className="detail-header">
           <div className="detail-badges">
             <span className="badge">{product.category}</span>
-            {product.available === false && (
-              <span className="badge badge-muted">Out of stock</span>
+            <span className="badge badge-muted">{product.brand}</span>
+            {!available && (
+              <span className="badge badge-warn">Out of stock</span>
             )}
           </div>
           {isAdmin && (
@@ -143,22 +146,26 @@ export default function ProductDetailPage() {
           </div>
           <div>
             <dt>Rating</dt>
-            <dd>★ {product.rating?.toFixed(1) ?? '—'}</dd>
+            <dd className="rating">★ {formatRating(product.rating)}</dd>
           </div>
           <div>
             <dt>Availability</dt>
-            <dd>{product.available !== false ? 'In stock' : 'Out of stock'}</dd>
+            <dd>{available ? 'In stock' : 'Out of stock'}</dd>
           </div>
           <div>
-            <dt>ID</dt>
+            <dt>Product ID</dt>
             <dd className="mono">{product.id}</dd>
           </div>
         </dl>
-        <section>
+        <section className="detail-description">
           <h2>Description</h2>
-          <p>{product.description}</p>
+          <p>{product.description || 'No description provided.'}</p>
         </section>
-        {error && <p className="alert alert-error">{error}</p>}
+        {error && (
+          <p className="alert alert-error" role="alert">
+            {error}
+          </p>
+        )}
       </article>
     </div>
   )

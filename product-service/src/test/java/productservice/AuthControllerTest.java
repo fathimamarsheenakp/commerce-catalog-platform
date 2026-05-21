@@ -13,6 +13,9 @@ import productservice.controller.AuthController;
 import productservice.exception.GlobalExceptionHandler;
 import productservice.security.JwtUtil;
 import productservice.security.PasswordEncoderConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,6 +34,9 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void defaultPasswordHashMatchesDevPassword() {
@@ -55,5 +61,36 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"wrong\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldLoginAsUser() throws Exception {
+
+        Map<String, String> request = Map.of(
+                "username", "user",
+                "password", "password"
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists());
+    }
+
+    @Test
+    void shouldReturnUnauthorizedForInvalidLogin() throws Exception {
+
+        Map<String, String> request = Map.of(
+                "username", "admin",
+                "password", "wrong"
+        );
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message")
+                        .value("Invalid username or password"));
     }
 }

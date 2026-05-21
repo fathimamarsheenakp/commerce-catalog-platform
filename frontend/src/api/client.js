@@ -64,6 +64,18 @@ export async function apiRequest(path, options = {}) {
     } catch {
       /* ignore */
     }
+    if (response.status === 403) {
+      message =
+        message === `Request failed (403)`
+          ? 'You do not have permission for this action. Admin access may be required.'
+          : message
+    }
+    if (response.status === 503) {
+      message =
+        message === `Request failed (503)`
+          ? 'Search service is unavailable. Start Elasticsearch and search-service.'
+          : message
+    }
     const error = new Error(message)
     error.status = response.status
     throw error

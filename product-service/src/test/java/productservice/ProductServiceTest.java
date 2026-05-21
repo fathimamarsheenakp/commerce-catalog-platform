@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
+import productservice.audit.AuditService;
 import productservice.event.ProductEvent;
 import productservice.kafka.ProductEventProducer;
 import productservice.model.Product;
@@ -31,6 +32,9 @@ public class ProductServiceTest {
 
     @InjectMocks
     private ProductService productService;
+
+    @Mock
+    private AuditService auditService;
 
     @Test
     void shouldCreateProduct() {
@@ -58,6 +62,9 @@ public class ProductServiceTest {
 
         verify(productEventProducer, times(1))
                 .sendProductEvent(any(ProductEvent.class));
+
+        verify(auditService, times(1))
+                .log(anyString(), eq("PRODUCT_CREATED"), anyString());
     }
     @Test
     void shouldGetProductById() {
@@ -148,6 +155,9 @@ public class ProductServiceTest {
 
         verify(productEventProducer, times(1))
                 .sendProductEvent(any(ProductEvent.class));
+
+        verify(auditService, times(1))
+                .log(anyString(), eq("PRODUCT_UPDATED"), anyString());
     }
 
     @Test
@@ -176,6 +186,9 @@ public class ProductServiceTest {
 
         verify(productEventProducer, times(1))
                 .sendProductEvent(any(ProductEvent.class));
+
+        verify(auditService, times(1))
+                .log(anyString(), eq("PRODUCT_DELETED"), anyString());
     }
 
 }

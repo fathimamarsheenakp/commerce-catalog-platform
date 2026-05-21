@@ -14,7 +14,11 @@
   --error-text: #b91c1c;
   --radius: 10px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --header-bg: #ffffff;
+  --primary-soft: #eff6ff;
+  --warn-bg: #fffbeb;
+  --warn-text: #b45309;
   --mono: ui-monospace, Consolas, monospace;
 }
 
@@ -637,8 +641,244 @@ code {
 .loading-banner {
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
-  background: #eff6ff;
+  background: var(--primary-soft);
   color: var(--primary);
   border-radius: 6px;
   font-size: 0.9rem;
+}
+
+/* —— Polish: layout, auth, alerts —— */
+
+.page-subtitle {
+  margin: 0;
+}
+
+.filters-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.empty-state-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.role-badge-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+}
+
+.role-badge-admin .role-badge-label {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.role-badge-user .role-badge-label {
+  background: #f3f4f6;
+  color: var(--text-muted);
+}
+
+.badge-warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.alert-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.alert-banner-text {
+  flex: 1;
+}
+
+.alert-dismiss {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 0.25rem;
+}
+
+.alert-dismiss:hover {
+  opacity: 1;
+}
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 8rem);
+  padding: 1rem 0;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-panel-header {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.login-panel-header h1 {
+  margin-top: 0.75rem;
+}
+
+.brand-mark-lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1rem;
+  margin: 0 auto;
+}
+
+.login-back {
+  display: inline-block;
+  margin-top: 1.25rem;
+}
+
+.demo-actions-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem;
+}
+
+.demo-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.detail-description h2 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.detail-skeleton-title {
+  height: 2rem;
+  width: 75%;
+  margin: 0.75rem 0;
+}
+
+.detail-skeleton-price {
+  height: 1.75rem;
+  width: 30%;
+  margin-bottom: 1.25rem;
+}
+
+.breadcrumb-skeleton {
+  width: 8rem;
+  margin-bottom: 1rem;
+}
+
+.skeleton-badge {
+  width: 5rem;
+  height: 1.5rem;
+}
+
+.product-card {
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.product-card:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
+}
+
+.product-card--unavailable {
+  opacity: 0.92;
+}
+
+.product-card-price {
+  font-size: 1.05rem;
+  color: var(--primary);
+}
+
+.btn:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.alert-dismiss:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .app-nav {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    margin-left: 0;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .detail-header {
+    flex-direction: column;
+  }
+
+  .detail-actions {
+    width: 100%;
+  }
+
+  .detail-actions .btn {
+    flex: 1;
+  }
 }

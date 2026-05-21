@@ -23,7 +23,7 @@ public class JwtUtilTest {
     @Test
     void shouldGenerateAndReadToken() {
 
-        String token = jwtUtil.generateToken("admin");
+        String token = jwtUtil.generateToken("admin", "ADMIN");
 
         String username = jwtUtil.extractUsername(token);
         String role = jwtUtil.extractRole(token);

@@ -1,9 +1,8 @@
 package productservice.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import productservice.audit.AuditService;
 import productservice.event.ProductEvent;
 import productservice.exception.ProductNotFoundException;
 import productservice.kafka.ProductEventProducer;
@@ -13,12 +12,16 @@ import productservice.repository.ProductRepository;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductEventProducer productEventProducer;
+    private final AuditService auditService;
 
     private void normalize(Product product) {
         if (product.getBrand() != null) {
@@ -28,6 +31,17 @@ public class ProductService {
         if (product.getCategory() != null) {
             product.setCategory(product.getCategory().trim().toLowerCase());
         }
+    }
+
+    private String currentUser() {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            return "system";
+        }
+
+        return authentication.getName();
     }
 
     public Product createProduct(Product product) {
@@ -40,6 +54,9 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
         productEventProducer.sendProductEvent(toEvent("PRODUCT_CREATED", savedProduct));
+
+        auditService.log(
+                currentUser(), "PRODUCT_CREATED", savedProduct.getId().toString());
 
         return savedProduct;
     }
@@ -78,6 +95,9 @@ public class ProductService {
         Product updatedProduct = productRepository.save(existingProduct);
         productEventProducer.sendProductEvent(toEvent("PRODUCT_UPDATED", updatedProduct));
 
+        auditService.log(
+                currentUser(), "PRODUCT_UPDATED", updatedProduct.getId().toString());
+
         return updatedProduct;
     }
 
@@ -85,6 +105,9 @@ public class ProductService {
         Product existingProduct = getProductById(id);
         productRepository.delete(existingProduct);
         productEventProducer.sendProductEvent(toEvent("PRODUCT_DELETED", existingProduct));
+
+        auditService.log(
+                currentUser(), "PRODUCT_DELETED", existingProduct.getId().toString());
     }
 
     private ProductEvent toEvent(String eventType, Product product) {

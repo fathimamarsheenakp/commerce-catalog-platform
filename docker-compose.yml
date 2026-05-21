@@ -1,4 +1,52 @@
 services:
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_CASSANDRA_CONTACT_POINTS: cassandra
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+      USER_USERNAME: ${USER_USERNAME}
+      USER_PASSWORD_HASH: ${USER_PASSWORD_HASH}
+
+  search-service:
+    build: ./search-service
+    container_name: search-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_ADDRESS: 0.0.0.0
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - product-service
+      - search-service
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      PRODUCT_SERVICE_URL: http://product-service:8081
+      SEARCH_SERVICE_URL: http://search-service:8082
+
   cassandra:
     image: cassandra:4.1
     container_name: cassandra
@@ -54,7 +102,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1" ]

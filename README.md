@@ -175,6 +175,21 @@ Check username/password. If you changed `ADMIN_PASSWORD_HASH`, ensure it matches
 
 Ensure gateway runs with `CORS_ALLOWED_ORIGINS` including your UI origin (default `http://localhost:5173`).
 
+### 500 on `/api/search/products` (catalog empty / error)
+
+Common causes:
+
+1. **Elasticsearch not running** — `docker compose up -d` and wait until `elasticsearch` is healthy.
+2. **search-service not reachable from api-gateway** — If you use Docker Compose, rebuild after config changes:
+   ```bash
+   docker compose up -d --build search-service api-gateway
+   ```
+   search-service must listen on `0.0.0.0` inside Docker (profile `docker`), not only `127.0.0.1`.
+3. **Mixed setup** — Gateway in Docker but search-service on the host with `local` profile: set
+   `SEARCH_SERVICE_URL=http://host.docker.internal:8082` on api-gateway.
+
+Check health: http://localhost:8082/actuator/health and http://localhost:9200
+
 ## Tech stack
 
 **Backend:** Java 17, Spring Boot 3.5, Spring Cloud Gateway, Spring Security, JWT, Cassandra, Kafka, Elasticsearch  

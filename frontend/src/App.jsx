@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import Layout from './components/Layout'
-import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import CatalogPage from './pages/CatalogPage'
 import LoginPage from './pages/LoginPage'
 import ManageProductsPage from './pages/ManageProductsPage'
@@ -19,9 +19,9 @@ export default function App() {
             <Route
               path="manage"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <ManageProductsPage />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route path="*" element={<Navigate to="/" replace />} />

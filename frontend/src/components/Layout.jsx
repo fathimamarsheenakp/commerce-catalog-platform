@@ -2,29 +2,37 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 
 export default function Layout() {
-  const { isAuthenticated, username, logout } = useAuth()
+  const { isAuthenticated, isAdmin, username, logout } = useAuth()
 
   return (
     <div className="app-shell">
       <header className="app-header">
         <Link to="/" className="brand">
-          <span className="brand-mark">CC</span>
+          <span className="brand-mark" aria-hidden="true">
+            CC
+          </span>
           <span className="brand-text">Commerce Catalog</span>
         </Link>
-        <nav className="app-nav">
+        <nav className="app-nav" aria-label="Main">
           <NavLink to="/" end>
             Browse
           </NavLink>
-          {isAuthenticated && (
+          {isAdmin && (
             <NavLink to="/manage" end>
-              Add product
+              Manage
             </NavLink>
           )}
         </nav>
         <div className="header-actions">
           {isAuthenticated && (
-            <span className="user-badge" title="Signed in">
-              {username ?? 'Admin'}
+            <span
+              className={`role-badge ${isAdmin ? 'role-badge-admin' : 'role-badge-user'}`}
+              title={isAdmin ? 'Administrator' : 'Read-only user'}
+            >
+              {username ?? 'User'}
+              <span className="role-badge-label">
+                {isAdmin ? 'Admin' : 'User'}
+              </span>
             </span>
           )}
           {isAuthenticated ? (
@@ -42,7 +50,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="app-footer">
-        Commerce Catalog Platform — product-service &amp; search-service
+        Commerce Catalog Platform — API gateway, search &amp; product services
       </footer>
     </div>
   )

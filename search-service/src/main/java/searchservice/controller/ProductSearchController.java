@@ -7,10 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/search/products")
@@ -30,8 +31,10 @@ public class ProductSearchController {
     }
 
     @GetMapping
-    public Iterable<ProductDocument> getAllProducts() {
-        return productSearchService.getAllProducts();
+    public List<ProductDocument> getAllProducts() {
+        List<ProductDocument> products = new ArrayList<>();
+        productSearchService.getAllProducts().forEach(products::add);
+        return products;
     }
 
 //    @GetMapping("/search")

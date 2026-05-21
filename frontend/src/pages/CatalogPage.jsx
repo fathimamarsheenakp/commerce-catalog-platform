@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import AlertBanner from '../components/AlertBanner'
 import ProductCard from '../components/ProductCard'
 import ProductGridSkeleton from '../components/ProductGridSkeleton'
 import { getAllProducts } from '../api/search'
@@ -8,7 +9,9 @@ import { normalizeProductList } from '../utils/normalizeProducts'
 
 export default function CatalogPage() {
   const location = useLocation()
-  const [catalogMessage] = useState(() => location.state?.catalogMessage ?? '')
+  const [catalogMessage, setCatalogMessage] = useState(
+    () => location.state?.catalogMessage ?? '',
+  )
   const [allProducts, setAllProducts] = useState([])
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('')
@@ -41,29 +44,8 @@ export default function CatalogPage() {
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const data = await getAllProducts()
-        if (!cancelled) setAllProducts(normalizeProductList(data))
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err.status === 0
-              ? 'Cannot reach the API. Start Docker, api-gateway (:8080), and search-service.'
-              : err.message || 'Failed to load products',
-          )
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [location.key])
+    loadCatalog()
+  }, [loadCatalog, location.key])
 
   const categories = useMemo(() => countByField(allProducts, 'category'), [allProducts])
   const brands = useMemo(() => countByField(allProducts, 'brand'), [allProducts])
@@ -92,7 +74,7 @@ export default function CatalogPage() {
       <header className="page-header">
         <div>
           <h1>Product catalog</h1>
-          <p className="muted">
+          <p className="muted page-subtitle">
             {loading && !hasProducts
               ? 'Loading catalog…'
               : hasProducts
@@ -105,12 +87,14 @@ export default function CatalogPage() {
           className="btn btn-ghost"
           onClick={loadCatalog}
           disabled={loading}
+          aria-busy={loading}
         >
           {loading ? 'Refreshing…' : 'Refresh'}
         </button>
       </header>
 
       <section className="filters panel">
+        <h2 className="filters-title">Filter &amp; sort</h2>
         <form
           className="filter-form"
           onSubmit={(e) => e.preventDefault()}
@@ -158,20 +142,29 @@ export default function CatalogPage() {
               </select>
             </label>
           </div>
-          <div className="filter-actions">
-            {hasActiveFilters && (
-              <button type="button" className="btn btn-ghost" onClick={clearFilters}>
+          {hasActiveFilters && (
+            <div className="filter-actions">
+              <button type="button" className="btn btn-ghost btn-sm" onClick={clearFilters}>
                 Clear filters
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </form>
       </section>
 
-      {catalogMessage && (
-        <p className="alert alert-success">{catalogMessage}</p>
+      <AlertBanner
+        variant="success"
+        autoDismissMs={6000}
+        onDismiss={() => setCatalogMessage('')}
+      >
+        {catalogMessage}
+      </AlertBanner>
+
+      {error && (
+        <p className="alert alert-error" role="alert">
+          {error}
+        </p>
       )}
-      {error && <p className="alert alert-error">{error}</p>}
 
       {loading && hasProducts && (
         <p className="loading-banner" role="status">
@@ -183,16 +176,18 @@ export default function CatalogPage() {
 
       {!showSkeleton && !hasProducts && !error && (
         <div className="empty-state panel">
-          <p>No products in the catalog yet.</p>
+          <p className="empty-state-title">No products yet</p>
           <p className="muted">
-            Sign in under Manage to add products. New items appear here after Kafka syncs to search (a few seconds).
+            Sign in as admin to add products. New items appear here after Kafka
+            syncs to search (usually a few seconds).
           </p>
         </div>
       )}
 
       {showNoMatches && (
         <div className="empty-state panel">
-          <p>No products match your filters.</p>
+          <p className="empty-state-title">No matches</p>
+          <p className="muted">Try different filters or clear them all.</p>
           <button type="button" className="btn btn-ghost" onClick={clearFilters}>
             Clear filters
           </button>

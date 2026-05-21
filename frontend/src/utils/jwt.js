@@ -14,7 +14,11 @@ export function getUsernameFromToken(token) {
   return payload?.sub ?? null
 }
 
-export function isAdminFromToken(token) {
+export function getRoleFromToken(token) {
   const payload = parseJwt(token)
-  return payload?.role === 'ADMIN'
+  return payload?.role ?? null
+}
+
+export function isAdminFromToken(token) {
+  return getRoleFromToken(token) === 'ADMIN'
 }
