@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { useToast } from '../context/useToast'
 
 const DEMO_ADMIN = 'admin'
 const DEMO_USER = 'user'
@@ -8,6 +9,7 @@ const DEMO_PASS = 'password'
 
 export default function LoginPage() {
   const { isAuthenticated, login } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -20,8 +22,13 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (sessionExpired) {
+      toast.warning('Your session expired. Please sign in again.')
+    }
+  }, [sessionExpired, toast])
 
   if (isAuthenticated) {
     return <Navigate to={from} replace />
@@ -30,18 +37,17 @@ export default function LoginPage() {
   function fillDemo(which) {
     setUsername(which === 'admin' ? DEMO_ADMIN : DEMO_USER)
     setPassword(DEMO_PASS)
-    setError('')
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
     setLoading(true)
     try {
       await login(username, password)
+      toast.success(`Signed in as ${username}`)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(err.message || 'Login failed')
+      toast.error(err.message || 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -60,12 +66,6 @@ export default function LoginPage() {
             features or a read-only user account.
           </p>
         </div>
-
-        {sessionExpired && (
-          <p className="alert alert-error" role="alert">
-            Your session expired. Please sign in again.
-          </p>
-        )}
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label>
@@ -89,11 +89,6 @@ export default function LoginPage() {
               required
             />
           </label>
-          {error && (
-            <p className="alert alert-error" role="alert">
-              {error}
-            </p>
-          )}
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>

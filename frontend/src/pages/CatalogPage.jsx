@@ -1,43 +1,40 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import AlertBanner from '../components/AlertBanner'
 import ProductCard from '../components/ProductCard'
 import ProductGridSkeleton from '../components/ProductGridSkeleton'
 import { getAllProducts } from '../api/search'
+import { useNavigationToast } from '../hooks/useNavigationToast'
+import { useToast } from '../context/useToast'
 import { countByField, filterProducts } from '../utils/filterProducts'
 import { normalizeProductList } from '../utils/normalizeProducts'
 
 export default function CatalogPage() {
   const location = useLocation()
-  const [catalogMessage, setCatalogMessage] = useState(
-    () => location.state?.catalogMessage ?? '',
-  )
+  useNavigationToast()
+  const toast = useToast()
+  const toastRef = useRef(toast)
+  toastRef.current = toast
   const [allProducts, setAllProducts] = useState([])
   const [keyword, setKeyword] = useState('')
   const [category, setCategory] = useState('')
   const [brand, setBrand] = useState('')
   const [sort, setSort] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (location.state?.catalogMessage) {
-      window.history.replaceState({}, document.title)
-    }
-  }, [location.state])
+  const [loadFailed, setLoadFailed] = useState(false)
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
-    setError('')
+    setLoadFailed(false)
     try {
       const data = await getAllProducts()
       setAllProducts(normalizeProductList(data))
     } catch (err) {
-      setError(
+      setLoadFailed(true)
+      const message =
         err.status === 0
           ? 'Cannot reach the API. Start Docker, api-gateway (:8080), and search-service.'
-          : err.message || 'Failed to load products',
-      )
+          : err.message || 'Failed to load products'
+      toastRef.current.error(message)
     } finally {
       setLoading(false)
     }
@@ -79,7 +76,9 @@ export default function CatalogPage() {
               ? 'Loading catalog…'
               : hasProducts
                 ? `Showing ${filteredProducts.length} of ${allProducts.length} products`
-                : 'No products loaded'}
+                : loadFailed
+                  ? 'Could not load products'
+                  : 'No products loaded'}
           </p>
         </div>
         <button
@@ -152,20 +151,6 @@ export default function CatalogPage() {
         </form>
       </section>
 
-      <AlertBanner
-        variant="success"
-        autoDismissMs={6000}
-        onDismiss={() => setCatalogMessage('')}
-      >
-        {catalogMessage}
-      </AlertBanner>
-
-      {error && (
-        <p className="alert alert-error" role="alert">
-          {error}
-        </p>
-      )}
-
       {loading && hasProducts && (
         <p className="loading-banner" role="status">
           Refreshing catalog…
@@ -174,13 +159,23 @@ export default function CatalogPage() {
 
       {showSkeleton && <ProductGridSkeleton />}
 
-      {!showSkeleton && !hasProducts && !error && (
+      {!showSkeleton && !hasProducts && !loadFailed && (
         <div className="empty-state panel">
           <p className="empty-state-title">No products yet</p>
           <p className="muted">
             Sign in as admin to add products. New items appear here after Kafka
             syncs to search (usually a few seconds).
           </p>
+        </div>
+      )}
+
+      {loadFailed && !hasProducts && (
+        <div className="empty-state panel">
+          <p className="empty-state-title">Catalog unavailable</p>
+          <p className="muted">Check the toast message and try Refresh.</p>
+          <button type="button" className="btn btn-primary" onClick={loadCatalog}>
+            Retry
+          </button>
         </div>
       )}
 

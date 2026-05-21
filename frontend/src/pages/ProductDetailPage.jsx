@@ -4,8 +4,10 @@ import DetailSkeleton from '../components/DetailSkeleton'
 import { deleteProduct } from '../api/products'
 import { getSearchProduct } from '../api/search'
 import { useAuth } from '../context/useAuth'
+import { useToast } from '../context/useToast'
 import { formatPrice, formatRating } from '../utils/format'
 import { normalizeProduct } from '../utils/normalizeProducts'
+import { navigationToastState } from '../utils/navigationToast'
 
 function idsMatch(a, b) {
   return a != null && b != null && String(a) === String(b)
@@ -16,19 +18,22 @@ export default function ProductDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
+  const toast = useToast()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
-  const [syncNote, setSyncNote] = useState(false)
-
   useEffect(() => {
     const fromNavigation = location.state?.product
     if (fromNavigation && idsMatch(fromNavigation.id, id)) {
       queueMicrotask(() => {
         setProduct(normalizeProduct(fromNavigation))
         setLoading(false)
-        setSyncNote(Boolean(location.state?.fromUpdate))
+        if (location.state?.fromUpdate) {
+          toast.info(
+            'Saved. Catalog search may take a few seconds to reflect changes.',
+          )
+        }
       })
       return
     }
@@ -37,14 +42,15 @@ export default function ProductDetailPage() {
     async function load() {
       setLoading(true)
       setError('')
-      setSyncNote(false)
       try {
         const data = await getSearchProduct(id)
         if (!cancelled) setProduct(normalizeProduct(data))
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || 'Product not found')
+          const message = err.message || 'Product not found'
+          setError(message)
           setProduct(null)
+          toast.error(message)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -54,7 +60,7 @@ export default function ProductDetailPage() {
     return () => {
       cancelled = true
     }
-  }, [id, location.state])
+  }, [id, location.state, toast])
 
   async function handleDelete() {
     if (!product || !window.confirm(`Delete "${product.name}"?`)) return
@@ -64,10 +70,15 @@ export default function ProductDetailPage() {
       await deleteProduct(product.id)
       navigate('/', {
         replace: true,
-        state: { catalogMessage: `"${product.name}" was deleted.` },
+        state: navigationToastState(
+          'success',
+          `"${product.name}" was deleted.`,
+        ),
       })
     } catch (err) {
-      setError(err.message || 'Delete failed')
+      const message = err.message || 'Delete failed'
+      setError(message)
+      toast.error(message)
       setDeleting(false)
     }
   }
@@ -103,11 +114,6 @@ export default function ProductDetailPage() {
       <Link to="/" className="text-link breadcrumb">
         ← Back to catalog
       </Link>
-      {syncNote && (
-        <p className="alert alert-success" role="status">
-          Saved. Catalog search may take a few seconds to reflect changes.
-        </p>
-      )}
       <article className="panel product-detail">
         <div className="detail-header">
           <div className="detail-badges">

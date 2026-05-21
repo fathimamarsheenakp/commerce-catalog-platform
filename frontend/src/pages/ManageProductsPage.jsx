@@ -9,7 +9,9 @@ import {
   productToForm,
   validateForm,
 } from '../utils/productFormUtils'
+import { useToast } from '../context/useToast'
 import { normalizeProduct } from '../utils/normalizeProducts'
+import { navigationToastState } from '../utils/navigationToast'
 
 function idsMatch(a, b) {
   return a != null && b != null && String(a) === String(b)
@@ -21,13 +23,12 @@ export default function ManageProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const editId = searchParams.get('edit')
   const isEditMode = Boolean(editId)
+  const toast = useToast()
 
   const [form, setForm] = useState(emptyProduct())
   const [editingId, setEditingId] = useState(null)
   const [loadingEdit, setLoadingEdit] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
   const updateId = editId ?? editingId
 
   function applyProductToForm(product) {
@@ -49,7 +50,6 @@ export default function ManageProductsPage() {
     let cancelled = false
     ;(async () => {
       setLoadingEdit(true)
-      setError('')
       try {
         const product = normalizeProduct(await getProduct(editId))
         if (!cancelled && product) {
@@ -57,7 +57,7 @@ export default function ManageProductsPage() {
           return
         }
         if (!cancelled) {
-          setError('Product not found in catalog database.')
+          toast.error('Product not found in catalog database.')
         }
       } catch (err) {
         if (cancelled) return
@@ -66,21 +66,21 @@ export default function ManageProductsPage() {
             const searchOnly = normalizeProduct(await getSearchProduct(editId))
             if (searchOnly) {
               applyProductToForm(searchOnly)
-              setError(
-                'Product loaded from search. Saving will sync it to the catalog database.',
+              toast.warning(
+                'Loaded from search only. Saving will sync it to the catalog database.',
               )
               return
             }
           } catch {
             /* ignore */
           }
-          setError(
+          toast.error(
             'Product not found. Ensure product-service and Cassandra are running.',
           )
         } else if (err.status === 401) {
-          setError('Please sign in as admin to edit products.')
+          toast.error('Please sign in as admin to edit products.')
         } else {
-          setError(err.message || 'Could not load product for editing')
+          toast.error(err.message || 'Could not load product for editing')
         }
       } finally {
         if (!cancelled) setLoadingEdit(false)
@@ -90,28 +90,26 @@ export default function ManageProductsPage() {
     return () => {
       cancelled = true
     }
-  }, [editId, location.state])
+  }, [editId, location.state, toast])
 
   function startCreate() {
     setEditingId(null)
     setForm(emptyProduct())
-    setError('')
     setSearchParams({})
     navigate('/manage', { replace: true })
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
 
     const validationErrors = validateForm(form)
     if (validationErrors.length > 0) {
-      setError(validationErrors.join('. '))
+      toast.error(validationErrors.join('. '))
       return
     }
 
     if (isEditMode && !updateId) {
-      setError('Missing product id. Open Edit from the product page again.')
+      toast.error('Missing product id. Open Edit from the product page again.')
       return
     }
 
@@ -123,28 +121,30 @@ export default function ManageProductsPage() {
         await updateProduct(updateId, payload)
         navigate('/', {
           replace: true,
-          state: { catalogMessage: 'Product updated successfully.' },
+          state: navigationToastState(
+            'success',
+            'Product updated successfully.',
+          ),
         })
       } else {
         const created = await createProduct(payload)
+        const message = created?.name
+          ? `"${created.name}" created successfully.`
+          : 'Product created successfully.'
         navigate('/', {
           replace: true,
-          state: {
-            catalogMessage: created?.name
-              ? `"${created.name}" created successfully.`
-              : 'Product created successfully.',
-          },
+          state: navigationToastState('success', message),
         })
       }
     } catch (err) {
       if (err.status === 404) {
-        setError(
-          'Product not found in catalog database. Sign in as admin and ensure product-service is running on port 8081.',
+        toast.error(
+          'Product not found in catalog database. Ensure product-service is running.',
         )
       } else if (err.status === 401 || err.status === 403) {
-        setError('Not authorized. Sign in as admin to create or edit products.')
+        toast.error('Not authorized. Sign in as admin to create or edit products.')
       } else {
-        setError(err.message || 'Save failed')
+        toast.error(err.message || 'Save failed')
       }
     } finally {
       setSaving(false)
@@ -177,8 +177,6 @@ export default function ManageProductsPage() {
           </button>
         )}
       </header>
-
-      {error && <p className="alert alert-error">{error}</p>}
 
       <section className="panel">
         {loadingEdit && !showForm && (

@@ -1,8 +1,15 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { useToast } from '../context/useToast'
 
 export default function Layout() {
   const { isAuthenticated, isAdmin, username, logout } = useAuth()
+  const toast = useToast()
+
+  function handleSignOut() {
+    logout()
+    toast.info('Signed out')
+  }
 
   return (
     <div className="app-shell">
@@ -36,7 +43,7 @@ export default function Layout() {
             </span>
           )}
           {isAuthenticated ? (
-            <button type="button" className="btn btn-ghost" onClick={logout}>
+            <button type="button" className="btn btn-ghost" onClick={handleSignOut}>
               Sign out
             </button>
           ) : (

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
 import Layout from './components/Layout'
 import AdminRoute from './components/AdminRoute'
 import CatalogPage from './pages/CatalogPage'
@@ -9,8 +10,9 @@ import ProductDetailPage from './pages/ProductDetailPage'
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <ToastProvider>
+      <AuthProvider>
+        <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<CatalogPage />} />
@@ -27,7 +29,8 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </ToastProvider>
   )
 }

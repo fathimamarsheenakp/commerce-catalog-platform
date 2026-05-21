@@ -1,9 +1,18 @@
+import { useEffect } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { useToast } from '../context/useToast'
 
 export default function AdminRoute({ children }) {
   const { isAuthenticated, isAdmin } = useAuth()
+  const toast = useToast()
   const location = useLocation()
+
+  useEffect(() => {
+    if (isAuthenticated && !isAdmin) {
+      toast.warning('Admin access is required to manage products.')
+    }
+  }, [isAuthenticated, isAdmin, toast])
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />
