@@ -47,6 +47,14 @@ services:
       PRODUCT_SERVICE_URL: http://product-service:8081
       SEARCH_SERVICE_URL: http://search-service:8082
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api-gateway
+
   cassandra:
     image: cassandra:4.1
     container_name: cassandra
