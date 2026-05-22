@@ -83,15 +83,8 @@ public class ProductSearchService {
                     : (int) Math.ceil((double) totalElements / safeSize);
 
             log.info(
-                    "Catalog search: page={}, size={}, keyword={}, category={}, brand={}, sort={}, hits={}",
-                    safePage,
-                    safeSize,
-                    kw,
-                    cat,
-                    br,
-                    sort,
-                    totalElements
-            );
+
+                    "Catalog search: page={}, size={}, keyword={}, category={}, brand={}, sort={}, hits={}", safePage, safeSize, kw, cat, br, sort, totalElements);
 
             return new PagedProductsResponse(content, safePage, safeSize, totalElements, totalPages);
         } catch (IOException e) {

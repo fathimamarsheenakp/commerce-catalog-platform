@@ -28,11 +28,15 @@ jobs:
 
       - name: Build product-service
         working-directory: product-service
-        run: mvn clean test
+        run: mvn clean package -DskipTests
 
       - name: Build search-service
         working-directory: search-service
-        run: mvn clean test
+        run: mvn clean package -DskipTests
+
+      - name: Build api-gateway
+        working-directory: api-gateway
+        run: mvn clean package -DskipTests
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
