@@ -2,16 +2,17 @@ package searchservice.controller;
 
 import org.springframework.data.domain.Page;
 import searchservice.document.ProductDocument;
+import searchservice.dto.PagedProductsResponse;
 import searchservice.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/search/products")
@@ -31,10 +32,15 @@ public class ProductSearchController {
     }
 
     @GetMapping
-    public List<ProductDocument> getAllProducts() {
-        List<ProductDocument> products = new ArrayList<>();
-        productSearchService.getAllProducts().forEach(products::add);
-        return products;
+    public PagedProductsResponse getProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
+            @RequestParam(required = false) String sort
+    ) {
+        return productSearchService.getProductsPage(page, size, keyword, category, brand, sort);
     }
 
 //    @GetMapping("/search")

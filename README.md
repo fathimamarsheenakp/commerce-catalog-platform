@@ -26,6 +26,8 @@ Microservices product catalog with **API Gateway**, **product-service** (Cassand
 
 Writes go to **Cassandra**; **Kafka** syncs the search index in Elasticsearch (usually a few seconds).
 
+**Catalog browse** uses paginated search: `GET /api/search/products?page=0&size=12` (optional `keyword`, `category`, `brand`, `sort`).
+
 ## Prerequisites
 
 - Java **17+**
@@ -174,6 +176,31 @@ Check username/password. If you changed `ADMIN_PASSWORD_HASH`, ensure it matches
 ### CORS errors from frontend
 
 Ensure gateway runs with `CORS_ALLOWED_ORIGINS` including your UI origin (default `http://localhost:5173`).
+
+### Search returns `pageable` / `number` (old API) or keyword filter ignored
+
+The catalog endpoint must return:
+
+```json
+{ "content": [], "page": 0, "size": 12, "totalElements": 0, "totalPages": 0 }
+```
+
+If you see `pageable`, `number`, `first`, `last`, Docker is running a **stale JAR**. Rebuild **inside Docker** (the `search-service` Dockerfile compiles on build):
+
+```bash
+docker compose build --no-cache search-service
+docker compose up -d search-service api-gateway
+```
+
+Verify:
+
+```powershell
+(Invoke-RestMethod "http://localhost:8080/api/search/products?keyword=apple&size=12").PSObject.Properties.Name
+```
+
+Expect: `content`, `page`, `size`, `totalElements`, `totalPages` — **not** `pageable`.
+
+With only Sony/OnePlus in the index, `keyword=apple` should return **empty** `content`.
 
 ### 500 on `/api/search/products` (catalog empty / error)
 

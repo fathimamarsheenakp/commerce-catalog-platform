@@ -67,7 +67,7 @@ public class SearchRepositoryIntegrationTest {
 
         List<ProductDocument> results =
                 productSearchRepository
-                        .findByNameContainingOrDescriptionContaining("Sony", "Sony");
+                        .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase("Sony", "Sony");
 
         assertThat(results).isNotEmpty();
     }
@@ -104,7 +104,7 @@ public class SearchRepositoryIntegrationTest {
 
         List<ProductDocument> results =
                 productSearchRepository
-                        .findByNameContainingOrDescriptionContainingAndCategory(
+                        .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
                                 "Apple", "Apple", "laptops");
 
 //        assertThat(results).hasSize(1);

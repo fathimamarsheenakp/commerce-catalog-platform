@@ -11,30 +11,57 @@ import java.util.UUID;
 public interface ProductSearchRepository
         extends ElasticsearchRepository<ProductDocument, UUID> {
 
-    List<ProductDocument> findByNameContainingOrDescriptionContaining(
+    List<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
             String name,
             String description
     );
 
-    List<ProductDocument>
-    findByNameContainingOrDescriptionContainingAndCategory(
+    List<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
             String name,
             String description,
             String category
     );
 
-    List<ProductDocument>
-    findByNameContainingOrDescriptionContainingAndCategoryAndBrand(
+    List<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryAndBrand(
             String name,
             String description,
             String category,
             String brand
     );
 
-    Page<ProductDocument>
-    findByNameContainingOrDescriptionContaining(
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
             String name,
             String description,
             Pageable pageable
     );
+
+    Page<ProductDocument>
+    findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseOrBrandContainingIgnoreCaseOrCategoryContainingIgnoreCase(
+            String name,
+            String description,
+            String brand,
+            String category,
+            Pageable pageable
+    );
+
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
+            String name,
+            String description,
+            String category,
+            Pageable pageable
+    );
+
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryAndBrand(
+            String name,
+            String description,
+            String category,
+            String brand,
+            Pageable pageable
+    );
+
+    Page<ProductDocument> findByCategory(String category, Pageable pageable);
+
+    Page<ProductDocument> findByBrand(String brand, Pageable pageable);
+
+    Page<ProductDocument> findByCategoryAndBrand(String category, String brand, Pageable pageable);
 }

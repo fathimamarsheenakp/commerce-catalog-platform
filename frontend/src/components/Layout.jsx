@@ -57,7 +57,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="app-footer">
-        Commerce Catalog Platform — API gateway, search &amp; product services
+        Commerce Catalog Platform
       </footer>
     </div>
   )

@@ -7,6 +7,27 @@ export function normalizeProductList(data) {
   return []
 }
 
+/** Normalize paginated search API response. */
+export function normalizePageResponse(data) {
+  if (!data) {
+    return {
+      content: [],
+      page: 0,
+      size: 12,
+      totalElements: 0,
+      totalPages: 0,
+    }
+  }
+  // PagedProductsResponse: { page, size, ... } — Spring Page: { number, size, ... }
+  return {
+    content: normalizeProductList(data.content ?? data),
+    page: data.page ?? data.number ?? 0,
+    size: data.size ?? 12,
+    totalElements: data.totalElements ?? 0,
+    totalPages: data.totalPages ?? 0,
+  }
+}
+
 /** Normalize a single product from search or product API. */
 export function normalizeProduct(data) {
   if (!data) return null

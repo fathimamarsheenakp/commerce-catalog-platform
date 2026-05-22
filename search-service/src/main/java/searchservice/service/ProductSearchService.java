@@ -1,11 +1,18 @@
 package searchservice.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import searchservice.document.ProductDocument;
+import searchservice.dto.PagedProductsResponse;
 import searchservice.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductSearchService {
@@ -32,53 +40,204 @@ public class ProductSearchService {
         return productSearchRepository.findAll();
     }
 
+    public PagedProductsResponse getProductsPage(
+            int page,
+            int size,
+            String keyword,
+            String category,
+            String brand,
+            String sort
+    ) {
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        int safePage = Math.max(page, 0);
+
+        String kw = normalizeKeyword(keyword);
+        String cat = normalizeToken(category);
+        String br = normalizeToken(brand);
+
+        try {
+            Query query = buildCatalogQuery(kw, cat, br);
+
+            SearchResponse<ProductDocument> response = elasticsearchClient.search(
+                    s -> {
+                        s.index("products")
+                                .from(safePage * safeSize)
+                                .size(safeSize)
+                                .query(query);
+                        applyElasticsearchSort(s, sort);
+                        return s;
+                    },
+                    ProductDocument.class
+            );
+
+            List<ProductDocument> content = response.hits().hits().stream()
+                    .map(Hit::source)
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            long totalElements = response.hits().total() != null
+                    ? response.hits().total().value()
+                    : content.size();
+            int totalPages = safeSize == 0
+                    ? 0
+                    : (int) Math.ceil((double) totalElements / safeSize);
+
+            log.info(
+                    "Catalog search: page={}, size={}, keyword={}, category={}, brand={}, sort={}, hits={}",
+                    safePage,
+                    safeSize,
+                    kw,
+                    cat,
+                    br,
+                    sort,
+                    totalElements
+            );
+
+            return new PagedProductsResponse(content, safePage, safeSize, totalElements, totalPages);
+        } catch (IOException e) {
+            throw new IllegalStateException("Elasticsearch catalog search failed", e);
+        }
+    }
+
+    private static Query buildCatalogQuery(String keyword, String category, String brand) {
+        if (keyword == null && category == null && brand == null) {
+            return Query.of(q -> q.matchAll(m -> m));
+        }
+
+        BoolQuery.Builder bool = new BoolQuery.Builder();
+
+        if (category != null) {
+            bool.filter(f -> f.term(t -> t.field("category.keyword").value(category)));
+        }
+        if (brand != null) {
+            bool.filter(f -> f.term(t -> t.field("brand.keyword").value(brand)));
+        }
+        if (keyword != null) {
+            String pattern = "*" + keyword.toLowerCase() + "*";
+            bool.must(m -> m.bool(inner -> inner
+                    .should(s -> s.wildcard(w -> w.field("name").value(pattern)))
+                    .should(s -> s.wildcard(w -> w.field("description").value(pattern)))
+                    .should(s -> s.wildcard(w -> w.field("brand.keyword").value(pattern)))
+                    .should(s -> s.wildcard(w -> w.field("category.keyword").value(pattern)))
+                    .minimumShouldMatch("1")
+            ));
+        }
+
+        return Query.of(q -> q.bool(bool.build()));
+    }
+
+    private static void applyElasticsearchSort(
+            co.elastic.clients.elasticsearch.core.SearchRequest.Builder search,
+            String sort
+    ) {
+        if ("priceAsc".equals(sort)) {
+            search.sort(s -> s.field(f -> f.field("price").order(SortOrder.Asc)));
+        } else if ("priceDesc".equals(sort)) {
+            search.sort(s -> s.field(f -> f.field("price").order(SortOrder.Desc)));
+        } else if ("rating".equals(sort)) {
+            search.sort(s -> s.field(f -> f.field("rating").order(SortOrder.Desc)));
+        } else {
+            search.sort(s -> s.field(f -> f.field("name.keyword").order(SortOrder.Asc)));
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    /** Lowercase filter tokens to match product-service normalization. */
+    private static String normalizeToken(String value) {
+        if (isBlank(value)) {
+            return null;
+        }
+        return value.trim().toLowerCase();
+    }
+
+    private static String normalizeKeyword(String value) {
+        if (isBlank(value)) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private static Sort buildSort(String sort) {
+        if ("priceAsc".equals(sort)) {
+            return Sort.by(Sort.Direction.ASC, "price");
+        }
+        if ("priceDesc".equals(sort)) {
+            return Sort.by(Sort.Direction.DESC, "price");
+        }
+        if ("rating".equals(sort)) {
+            return Sort.by(Sort.Direction.DESC, "rating");
+        }
+        return Sort.by(Sort.Direction.ASC, "name");
+    }
+
+    private static PagedProductsResponse toPagedResponse(Page<ProductDocument> page) {
+        return new PagedProductsResponse(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+    }
+
     public List<ProductDocument> search(String keyword) {
-        return productSearchRepository.findByNameContainingOrDescriptionContaining(keyword, keyword);
+        return productSearchRepository
+                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
     }
 
     public List<ProductDocument> search(String keyword, String category) {
+        String cat = normalizeToken(category);
 
-        if (category != null && !category.isBlank()) {
+        if (cat != null) {
             return productSearchRepository
-                    .findByNameContainingOrDescriptionContainingAndCategory(keyword, keyword, category);
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
+                            keyword, keyword, cat);
         }
 
         return productSearchRepository
-                .findByNameContainingOrDescriptionContaining(keyword, keyword);
+                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
     }
 
     public List<ProductDocument> search(String keyword, String category, String brand) {
+        String cat = normalizeToken(category);
+        String br = normalizeToken(brand);
 
-        if (category != null && brand != null) {
+        if (cat != null && br != null) {
             return productSearchRepository
-                    .findByNameContainingOrDescriptionContainingAndCategoryAndBrand(keyword, keyword, category, brand);
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryAndBrand(
+                            keyword, keyword, cat, br);
         }
 
-        if (category != null) {
+        if (cat != null) {
             return productSearchRepository
-                    .findByNameContainingOrDescriptionContainingAndCategory(keyword, keyword, category);
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
+                            keyword, keyword, cat);
         }
 
         return productSearchRepository
-                .findByNameContainingOrDescriptionContaining(keyword, keyword);
+                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
     }
 
-    public List<ProductDocument> search(String keyword, String category, String brand, String sort
-    ) {
+    public List<ProductDocument> search(String keyword, String category, String brand, String sort) {
+        String cat = normalizeToken(category);
+        String br = normalizeToken(brand);
 
         List<ProductDocument> products;
 
-        if (category != null && brand != null) {
+        if (cat != null && br != null) {
             products = productSearchRepository
-                    .findByNameContainingOrDescriptionContainingAndCategoryAndBrand(keyword, keyword, category, brand);
-        }
-        else if (category != null) {
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryAndBrand(
+                            keyword, keyword, cat, br);
+        } else if (cat != null) {
             products = productSearchRepository
-                    .findByNameContainingOrDescriptionContainingAndCategory(keyword, keyword, category);
-        }
-        else {
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategory(
+                            keyword, keyword, cat);
+        } else {
             products = productSearchRepository
-                    .findByNameContainingOrDescriptionContaining(keyword, keyword);
+                    .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
         }
 
         List<ProductDocument> result = new ArrayList<>(products);
@@ -103,7 +262,7 @@ public class ProductSearchService {
         Pageable pageable = PageRequest.of(page, size);
 
         return productSearchRepository
-                .findByNameContainingOrDescriptionContaining(keyword, keyword, pageable);
+                .findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword, pageable);
     }
 
     public Map<String, Long> getProductCountByCategory() throws IOException {

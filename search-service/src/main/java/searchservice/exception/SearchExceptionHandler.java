@@ -28,6 +28,15 @@ public class SearchExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
+        log.error("Search operation failed", ex);
+        return error(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ex.getMessage() != null ? ex.getMessage() : "Search operation failed"
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         log.error("Unexpected search-service error", ex);
