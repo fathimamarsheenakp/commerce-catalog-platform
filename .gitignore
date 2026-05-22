@@ -2,3 +2,6 @@
 .env.local
 *.env
 !.env.example
+
+# Kubernetes local secrets (use app-secrets.example.yaml as template)
+k8s/secrets/app-secrets.yaml

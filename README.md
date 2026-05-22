@@ -35,6 +35,17 @@ Writes go to **Cassandra**; **Kafka** syncs the search index in Elasticsearch (u
 - Node.js **18+**
 - Docker Desktop
 
+## Kubernetes (optional)
+
+Deploy the full stack to a local cluster (Docker Desktop K8s, kind, minikube):
+
+```powershell
+.\k8s\scripts\build-images.ps1
+.\k8s\scripts\deploy.ps1
+```
+
+Open **http://localhost:30173** (UI) and **http://localhost:30080** (API). See [k8s/README.md](k8s/README.md) for details, kind image loading, and production notes.
+
 ## 1. Start infrastructure
 
 From the project root:
@@ -223,4 +234,4 @@ Check health: http://localhost:8082/actuator/health and http://localhost:9200
 
 **Frontend:** React, Vite, React Router  
 
-**Infra:** Docker Compose
+**Infra:** Docker Compose, **Kubernetes** ([k8s/README.md](k8s/README.md))
